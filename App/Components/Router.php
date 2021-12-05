@@ -2,7 +2,7 @@
 
 namespace App\Components;
 
-use Closure;
+use InvalidArgumentException;
 
 class Router
 {
@@ -15,17 +15,17 @@ class Router
         $this->request = $request;
     }
 
-    public function get(string $path, Closure $callback): void
+    public function get(string $path, $action): void
     {
-        $this->routes['GET'][$path] = $callback;
+        $this->routes['GET'][$path] = $action;
     }
 
-    public function post(string $path, Closure $callback): void
+    public function post(string $path, $action): void
     {
-        $this->routes['POST'][$path] = $callback;
+        $this->routes['POST'][$path] = $action;
     }
 
-    public function resolve(): void
+    public function resolve()
     {
         //remove index.php ******************
         $path   = str_replace('/index.php', '', $this->request->getPath());
@@ -34,6 +34,26 @@ class Router
         if (is_null($action)) {
             die('Not found!');
         }
-        call_user_func($action);
+
+        if (is_array($action)) {
+            $this->renderController($action);
+        }
+
+        if (is_callable($action)) {
+            call_user_func($action);
+        }
+    }
+
+    protected function renderController($action): void
+    {
+        $class  = array_key_first($action);
+        $method = array_shift($action);
+
+        if (!method_exists($class, $method)) {
+            throw new InvalidArgumentException("Method `$method` not found on $class");
+        }
+
+        (new $class)->$method();
+
     }
 }

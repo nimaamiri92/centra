@@ -11,11 +11,6 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 $app = new Application();
 
-$app->router->get('/',function(){
-    echo '<pre>';
-    var_dump('nima');
-    echo '</pre>';
-    exit();
-});
+$app->router->get('/nima',[\App\Controllers\HomeController::class => 'index']);
 
 $app->run();
